@@ -1,6 +1,14 @@
 # User Satisfaction on Board Game Complexity
 **Authors: Mohamed Elghetany, Yasmine Hejazi, Keith Hutton, Melissa McGee**
 
+    .
+    ├── notebooks               # Compiled files
+    ├── src                     
+    │   ├── img                 # Report images
+    │   ├── scrapers            # Data scrapers
+    ├── report.pdf              # Full report
+    └── README.md
+
 Our society is currently living in a board game renaissance. More than 5,000 new board games or expansions are released every year according to online resource Board Game Geek. With new games being created day after day, players are turning to explore more heavily-themed and complex innovations that can make games take hours and even days to play.
 
 The board game industry has undergone a huge development over hundreds of years, and with that comes the birth of many new genres and mechanics that make board games more diverse and complex. With the knowledge of a constantly-developing and diversifying market, we understand that not all board game innovations are successful. As new categories, mechanics, and complexities are introduced, we want to understand what makes board games more enjoyable and what doesn’t. Specifically, we aim to answer the research question:
