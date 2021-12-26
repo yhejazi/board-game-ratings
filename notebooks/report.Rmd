@@ -67,14 +67,13 @@ Websites like Board Game Geek, The Dice Tower, and Shut Up and Sit Down are plat
 Our analysis leverages data scraped from [BoardGameGeek.com](boardgamegeek.com), an online platform and community that aims to be the definitive source for board game/tabletop and card game content. Board Game Geek has an extensive database of more than 20,000 board games as well as an active community of users who discuss, buy, sell, trade, and play board games. Each game has its own game entry with information about the game, user ratings, forums for discussion, and more.
 
 ```{r load data, echo = FALSE, message = FALSE, include=FALSE}
-# read in reviews, games, and complexity CSVs
 reviews <- fread("../data/reviews.csv", stringsAsFactors = FALSE, na.strings = c("", "NA"))
 games <- fread("../data/games.csv", stringsAsFactors = FALSE, na.strings = c("", "NA"))
 complexity <- fread("../data/complexity.csv", stringsAsFactors = FALSE, na.strings = c("","NA"))
 ```
 
 ```{r split categories, echo = FALSE, message = FALSE, include=FALSE}
-# explode categories to dummy variables (one-hot encoding)
+# Explode categories to dummy variables (one-hot encoding)
 split_categories = unlist(strsplit(games$category, ",", fixed = TRUE))
 df <- as.data.frame(split_categories)
 df$all_categories <- trimws(df$split_categories, which = c("both"))
@@ -98,7 +97,6 @@ names(games) <- gsub("'", "", names(games))
 ```
 
 ```{r join data, echo = FALSE, message = FALSE}
-# merge datasets
 setDT(games)
 setkey(reviews, 'game_id')
 setkey(games, 'game_id')
@@ -128,7 +126,6 @@ The data was scraped on November 18, 2021, resulting in `r nrow(complexity)` boa
 These three datasets are combined using the common `game_id` defined by Board Game Geek. This resulting dataset provides us with `r nrow(data)` rows and `r ncol(data)` columns for analysis. The full joined dataset contains reviews of `r nrow(games)` games from `r length(unique(data$user))` distinct users.
 
 ```{r clean, warning=FALSE, message = FALSE, include=FALSE}
-# cleaning function
 data <- clean(data)
 ```
 
@@ -141,15 +138,13 @@ partition_result <- partition(
 )
 
 explore_df <- partition_result[[1]]
-testing_df <- partition_result[[2]]
-
-final_df = testing_df
+final_df <- partition_result[[2]]
 ```
 
 
 Minor cleanup steps are performed to ensure that our data is accurate for the needs of our analysis. These steps include removing NA values of our outcome variable `rating` and big complexity players `complexity`, `min_age`, and `playtime`. We ensure to only include games where minimum and maximum playtime are in logical order and the year published does not exceed the current year 2021.
 
-The data is split into an explore set (30% split, `r nrow(explore_df)` rows) and a test dataset (70% split, `r nrow(testing_df)` rows) for our research design. We conduct exploratory data analysis on the 30% split to identify variables and relationships we want to portray in our model; then, we use the 70% split to build our models using the selection from our EDA as an effort to reduce bias.
+The data is split into an explore set (30% split, `r nrow(explore_df)` rows) and a test dataset (70% split, `r nrow(final_df)` rows) for our research design. We conduct exploratory data analysis on the 30% split to identify variables and relationships we want to portray in our model; then, we use the 70% split to build our models using the selection from our EDA as an effort to reduce bias.
 
 
 ## 2.2 Rating Characteristics
@@ -203,14 +198,14 @@ Board Game Geek has a wide variety of review engagement for its users. With `r n
 
 Preliminarily, we chose the following board game characteristic variables to analyze for our research design.
 
-- `complexity`: our main right hand side (RHS) variable that may be highly correlated with other RHS variables that are part of our overall definition of "game complexity"
-- `year_published`: important to be investigated during variable selection process during modeling
-- `min_players`: important to be investigated during variable selection process during modeling
-- `max_players`: important to be investigated during variable selection process during modeling
-- `min_playtime`: important to be investigated during variable selection process during modeling
-- `max_playtime`: important to be investigated during variable selection process during modeling
-- `min_age`: important to be investigated during variable selection process during modeling
-- `category`: important to be investigated during variable selection process during modeling
+- `complexity`: the average user-rated complexity score for each board game on a scale of 1 to 5
+- `year_published`: the year that the board game was published
+- `min_players`: the minimum players required to play the game
+- `max_players`: the maximum players able to play the game
+- `min_playtime`: the minimum playtime for the game provided by Board Game Geek
+- `max_playtime`: the maximum playtime for the game provided by Board Game Geek
+- `min_age`: the minimum age required to play the game
+- `category`: the categories that the game falls under
 
 ```{r year_published count, echo = FALSE, message = FALSE, include=FALSE}
 game_year_df <- unique(explore_df[,c("game_id", "name", "year_published")])
@@ -248,8 +243,6 @@ year_grouped_2021 <- d2021 %>% filter(year_published >= 1921) %>%
 ```{r year_rating plot, warning=FALSE, message = FALSE, echo = FALSE, fig.cap='Board game rating count and average by publishing year in the last 100 years', fig.height = 3}
 year_rating_plot
 ```
-
-
 
 As shown in Figure 2, board games that are published relatively recently tend to have a large number of reviews compared to games published earlier such as those published in the nineteen-hundreds. A peak of 394,628 total game reviews can be observed in the year 2016, when big-impact games like Terraforming Mars (21,621 reviews), Scythe (18,883 reviews), and Kingdomino (10,738 reviews) were published. The number of reviews per year then declines in the years following 2016, which can potentially be explained by those later-published games not having as much time to gather reviews on the BGG website. This pattern can especially be seen in the years 2020 and 2021, where games like Cascadia were just published last August (2021) and are just beginning to rack up reviews.
 
@@ -329,10 +322,6 @@ kable(
 )
 ```
 
-As we report in Table 2, the average complexity of board games where users rated a 1 is 2.07, while the average complexity of games where users gave ratings of 10 is 2.79. We can observe a pattern where complexity generally increases as user rating increases. A similar pattern can be observed for the other variables reported in Table 1: average minimum age, average minimum playtime, and average maximum playtime, which generally increase as rating increases.
-
-Shown in Figure 3 is a series of boxplots indicating the complexity distribution differences based on the user ratings. The observed pattern in Table 2 is further supported through the boxplot medians for each rating. While board games with a rating of 1 have a higher average complexity score relative to ratings 2, 3, 4, and 5, the boxplot for ratings of 1 shows that there is a wider interquantile range as compared to that seen in the boxplots of the other ratings, indicating that there is more variance in complexity for ratings of 1.
-
 ```{r, include=FALSE}
 box_plot_df <- explore_df
 box_plot_df$rating_int <- as.factor(box_plot_df$rating_int)
@@ -350,6 +339,10 @@ comp_rating_plot <- ggplot(box_plot_df, aes(x=complexity, y=rating_int, fill=rat
 comp_rating_plot
 ```
 
+As we report in Table 2, the average complexity of board games where users rated a 1 is 2.07, while the average complexity of games where users gave ratings of 10 is 2.79. We can observe a pattern where complexity generally increases as user rating increases. A similar pattern can be observed for the other variables reported in Table 1: average minimum age, average minimum playtime, and average maximum playtime, which generally increase as rating increases.
+
+Shown in Figure 3 is a series of boxplots indicating the complexity distribution differences based on the user ratings. The observed pattern in Table 2 is further supported through the boxplot medians for each rating. While board games with a rating of 1 have a higher average complexity score relative to ratings 2, 3, 4, and 5, the boxplot for ratings of 1 shows that there is a wider interquantile range as compared to that seen in the boxplots of the other ratings, indicating that there is more variance in complexity for ratings of 1.
+
 
 ## 2.4 Research Design
 
@@ -359,9 +352,7 @@ A correlational research design approach will be used with it being hypothesized
 
 # 3 Modeling
 
-We plan to use the complexity rating in our analysis, as it is intended to be a composite made up of factors defined by Board Game Geek discussed in section 2.3 of this report. Furthermore, we will consider the minimum age, minimum playtime, and maximum playtime explanatory variables as additional indicators of complexity.
-
-Additionally, we chose to use robust standard errors clustered by users and games, allowing us to take into account this non-independence.
+We plan to use the complexity rating in our analysis, as it is intended to be a composite made up of factors defined by Board Game Geek discussed in section 2.3 of this report. We consider the minimum age, minimum playtime, and maximum playtime explanatory variables as additional indicators of complexity. Additionally, we chose to use robust standard errors clustered by users and games, allowing us to take into account this non-independence.
 
 Beyond the complexity data, we will develop models which use other available variables, including explanatory variables that may be indicators of complexity, but which are not fully captured by the complexity composite variable, as well as other control variables. The other explanatory variable candidates which we suspect to be indicators of complexity were generally moderately positively correlated with the complexity composite variable. As these variables are only moderately positively correlated, they will be included in some of the models, bearing in mind that some of the complexity of the game may be explained by these other explanatory variables, thus impacting their inferred effect sizes. We will assess the stability of the effect size of the complexity composite variable as these variables are added to the model.
 
@@ -375,32 +366,7 @@ In addition to the complexity variable, we will develop models with the followin
 
 There is an issue of dependency in this dataset as users may rate multiple games, and games have ratings by multiple users. In order to account for this non-independence we calculated standard errors by clustering by user and game names.
 
-As depicted in the exploratory data analysis section, the minimum and maximum play time had large ranges and high leverage points. Thus, we chose to winsorize the max player values, limiting them to a maximum of 15. Based on skewness in the distributions, the maximum number of players, the minimum number of players, and the maximum playtime were log10 transformed. Additionally, the year published contained negative values (presumably BC) and showed high negative skewness; therefore, this variable was converted to the game age and log10 transformed: this shifted the negative skewness to positive skewness and allowed log10 tranformation to reduce it.
-
-```{r histograms untransformed, echo=FALSE}
-# par(mfrow=c(3,3))
-# hist(final_df$min_players, breaks = 10, main = "Minimum Players", xlab = 'min_players')
-# hist(final_df$max_players, breaks = 10, main = "Maximum Players", xlab = 'max_players')
-# hist(final_df$min_playtime, breaks = 10, main = "Minimum Playtime", xlab = 'min_playtime (mins)')
-# hist(final_df$max_playtime, breaks = 10, main = "Max Playtime", xlab = 'max_playtime (mins)')
-# hist(final_df$min_age, breaks = 10, main = "Minimum Player Age", xlab = 'min_age (years)')
-# hist(final_df$complexity, breaks = 10, main = "Complexity", xlab = 'complexity')
-# hist(final_df$rating_int, breaks = 10, main = "Rating", xlab = 'rating')
-# hist(final_df$year_published, main = "Year Published", xlab = 'year_published')
-```
-
-```{r histograms transformed log10, echo=FALSE}
-# par(mfrow=c(3,3))
-# hist(log10(final_df$min_players), breaks = 10, main = "log10(Minimum Players)", xlab = 'log10(min_players)')
-# hist(log10(final_df$max_players), breaks = 10, main = "log10(Maximum Players)", xlab = 'log10(max_players)')
-# hist(log10(final_df$min_playtime), breaks = 10, main = "log10(Minimum Playtime)", xlab = 'log10(min_playtime (mins))')
-# hist(log10(final_df$max_playtime), breaks = 10, main = "log10(Max Playtime)", xlab = 'log10(max_playtime (mins))')
-# hist(log10(final_df$min_age), breaks = 10, main = "log10(Minimum Player Age)", xlab = 'log10(min_age (years))')
-# hist(log10(final_df$complexity), breaks = 10, main = "log10(Complexity)", xlab = 'log10(complexity)')
-# hist(log10(final_df$rating_int), breaks = 10, main = "log10(Rating)", xlab = 'log10(rating)')
-# hist(log10(final_df$game_age), breaks = 10, main = "Years Since First Published", xlab = 'log10(game age (years))')
-
-```
+As depicted in the exploratory data analysis section, the minimum and maximum play time had large ranges and high leverage points. Thus, we chose to winsorize the max player values, limiting them to a maximum of 15. Based on skewness in the distributions, the maximum number of players, the minimum number of players, and the maximum playtime were log10 transformed. The year published contained negative values, presumably BC, and showed high negative skewness; therefore, this variable was converted to the game age and log10 transformed: this shifted the negative skewness to positive skewness and allowed log10 tranformation to reduce it.
 
 
 ```{r ggpairs, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
@@ -417,6 +383,7 @@ d_gg_pairs <- final_df %>%
 #         axis.text.y = element_text(angle = 45))
 
 ```
+
 Rather than use all 85 one-hot encoded category variables, we chose to use Principal Component Analysis (PCA) to abstract fewer synthetic variables. Each game can belong to multiple categories with a total of 85 categories in the dataset. Thus, we have 85 indicator variables for each of these categories which can be cumbersome to model; it behooves us to reduce the dimensionality of our dataset while maintaining a significant portion of information in which these categories provide. PCA enables us to do this.
 
 Based on the plot below we narrowed our original set of 85 category variables to 6 principal components that explained 36% of the total variance in the category matrix to be used as control variables in our linear models:
@@ -426,17 +393,18 @@ d_categories <- final_df[,grep('category_',names(final_df))]
 pca <- prcomp(d_categories[,])
 
 d_final_with_pcs <- cbind(final_df, pca$x[,1:6])
+
+pca_scree_plot <- fviz_eig(pca, addlabels = TRUE) + labs(title = "Category Variables PCA")
 ```
 
-```{r - PCA plot, echo=FALSE}
-pca_scree_plot <- fviz_eig(pca, addlabels = TRUE)
-pca_scree_plot + labs(title = "Category Variables PCA Scree Plot")
+```{r pca plot, warning=FALSE, message = FALSE, echo = FALSE, fig.cap='Category Variables PCA', fig.height = 3}
+pca_scree_plot 
 ```
 
 
 ## 3.1 Base Model
 
-In the first iteration of modeling (base model), we include only the primary explanatory variable of interest, the complexity variable:
+In the first iteration of modeling, we include only the primary explanatory variable of interest, the complexity variable:
 
 $$
   rating = \beta_{0} + \beta_{1}complexity
@@ -449,11 +417,11 @@ model_no_covariates_explanatory_power_perc <- model_no_covariates_fit*100
 
 ```
 
-In the base model (without covariates) we determine that the complexity variable is statistically significant. This suggests our hypothesis is correct, but p-values may be misleading given the large number of observations, suggesting we should instead focus on the effect size of complexity on rating. The overall model has a coefficient of determination of `r round(model_no_covariates_fit,3)`, indicating that `r round(model_no_covariates_explanatory_power_perc,1)`% of the variance in the outcome (rating) variable is being described by the base model. The effect size of complexity is `r round(model_no_covariates$coefficients[2],3)`, indicating that a one unit increase in complexity increases the rating by `r round(model_no_covariates$coefficients[2],3)` units.
+In the base model without covariates, we determine that the complexity variable is statistically significant. This suggests our hypothesis is correct, but p-values may be misleading given the large number of observations, suggesting we should instead focus on the effect size of complexity on rating. The overall model has a coefficient of determination of `r round(model_no_covariates_fit,3)`, indicating that `r round(model_no_covariates_explanatory_power_perc,1)`% of the variance in the outcome (rating) variable is being described by the base model. The effect size of complexity is `r round(model_no_covariates$coefficients[2],3)`, indicating that a one unit increase in complexity increases the rating by `r round(model_no_covariates$coefficients[2],3)` units.
 
 ## 3.2 Second Model
 
-In the second model, we include additional explanatory variables that are part of how we define complexity:
+In our second model, we include additional explanatory variables that are part of how we define complexity:
 
 - Minimum age (min_age): A simple game likely has a low minimum age; a more complex game likely has a higher minimum age.
 - Minimum playtime (min_playtime): A simple game likely has a low minimum play time; a more complex game likely has a higher minimum playtime. We note that due to positive skewness, we will log base 10 transform this variable for modeling.
@@ -472,7 +440,7 @@ model_with_additional_explanatory_vars <- lm(rating_int ~ complexity + min_age +
 
 ## 3.3 Third Model
 
-In the third model, we include other control variables to account for aspects of the game that may affect user ratings:
+In our third model, we include other control variables to account for aspects of the game that may affect user ratings:
 
 - Years since publishing (age of game): As board games have become more popular in recent years, there has been an increase in the number and types of mechanics by which games are played; likely, a higher age (indicating an older game) would correlate with a simpler game.
 - Minimum number of players: At first thought, one might believe that a lower minimum number of players would correspond to a simpler game. However, incredibly complex games like chess and go are two player games. We thus control for the number of players rather than treating it as an explanatory variable.
@@ -615,16 +583,16 @@ There is no perfect collinearity across the variables in merged dataset. No vari
 1. R didn’t drop any explanatory variables from the linear model, indicating no perfect collinearity
 2. The correlation coefficients in the correlation matrix shows that there is no perfect collinearity
 
-```{r correlation matrix, echo=FALSE}
+
+```{r corr plot, warning=FALSE, message = FALSE, echo = FALSE, fig.cap='Correlation matrix of model variables', fig.height = 3}
 corrplot(cor(d_gg_pairs), method = 'number', tl.col = 'black', cl.ratio = 0.2, col = COL2('PuOr', 10), number.cex=0.80)
 ```
-
 
 ## 5.2 Structural Limitations - Omitted Variables
 
 No chain of causality is ever simple, and we have identified several omitted variables that could have an effect on our final model. They are outlined in the causal diagram below.
 
-```{r causal graph, echo=FALSE}
+```{r make causal graph, echo=FALSE}
 dag <- dagify(Rating ~ Complexity + Price + Ownership + Sponsorship + Min_Age + Playtime + Year_Pub + Category + Epsilon, Ownership ~ Price + Sponsorship, Complexity ~ Min_Age)
 dag <- dag %>%
   tidy_dagitty() %>%
@@ -635,13 +603,18 @@ dag <- dag %>%
                             ifelse(name == "Category" | name == "Year_Pub", "Control" , 
                             ifelse(name == "Epsilon", "Epsilon", "Main"))))) 
   
-dag %>%  
+dag_plot <- dag %>%  
   ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
   geom_dag_point(aes(colour = Variables)) +
   geom_dag_edges() +
   geom_dag_text(size=2) +
   theme_dag()
 ```
+
+```{r causal plot, warning=FALSE, message = FALSE, echo = FALSE, fig.cap='Causal diagram with omitted variables', fig.height = 3}
+dag_plot
+```
+
 
 ### Intentional omitted variables
 There are a few variables that were available to us in the scraped dataset, yet were omitted from the model. These variables are all categorical (ie non-numeric) with multiple factors. Including these variables, which would have each required additional one-hot encoding to add each categorical variable to each observation in our dataset would have increased the dimensionality to a prohibitively large size that would inhibit us in being able to effectively model given our available hardware.
