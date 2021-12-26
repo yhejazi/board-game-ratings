@@ -576,21 +576,22 @@ The merged dataset that we used in this analysis to answer our research question
 
 ### Evaluating assumption 2: A Unique BLP Exists
 
+```{r corr plot, warning=FALSE, message = FALSE, echo = FALSE, fig.cap='Correlation matrix of model variables', fig.height = 4}
+corrplot(cor(d_gg_pairs), method = 'number', tl.col = 'black', cl.ratio = 0.2, col = COL2('PuOr', 10), number.cex=0.80)
+```
+
 In determining if a unique BLP exists the data must be assessed to ensure that there is no perfect collinearity. For this assumption to be met, no variable can be written as an exact linear combination of any other variable(s).
 
 There is no perfect collinearity across the variables in merged dataset. No variable(s) can fully explain the variability of another variable as shown in the correlation matrix below. The lack of the presence of perfect collinearity is illustrated by the following points:
 
-1. R didn’t drop any explanatory variables from the linear model, indicating no perfect collinearity
-2. The correlation coefficients in the correlation matrix shows that there is no perfect collinearity
+1. R didn’t drop any explanatory variables from the linear model, indicating no perfect collinearity.
+2. The correlation coefficients in the correlation matrix in Figure 5 shows that there is no perfect collinearity.
 
 
-```{r corr plot, warning=FALSE, message = FALSE, echo = FALSE, fig.cap='Correlation matrix of model variables', fig.height = 3}
-corrplot(cor(d_gg_pairs), method = 'number', tl.col = 'black', cl.ratio = 0.2, col = COL2('PuOr', 10), number.cex=0.80)
-```
 
 ## 5.2 Structural Limitations - Omitted Variables
 
-No chain of causality is ever simple, and we have identified several omitted variables that could have an effect on our final model. They are outlined in the causal diagram below.
+No chain of causality is ever simple, and we have identified several omitted variables that could have an effect on our final model. These are outlined in the causal diagram in Figure 6.
 
 ```{r make causal graph, echo=FALSE}
 dag <- dagify(Rating ~ Complexity + Price + Ownership + Sponsorship + Min_Age + Playtime + Year_Pub + Category + Epsilon, Ownership ~ Price + Sponsorship, Complexity ~ Min_Age)
@@ -611,7 +612,7 @@ dag_plot <- dag %>%
   theme_dag()
 ```
 
-```{r causal plot, warning=FALSE, message = FALSE, echo = FALSE, fig.cap='Causal diagram with omitted variables', fig.height = 3}
+```{r causal plot, warning=FALSE, message = FALSE, echo = FALSE, fig.cap='Causal diagram with omitted variables', fig.height = 4}
 dag_plot
 ```
 
